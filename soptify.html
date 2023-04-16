@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Spotify Podcast Search</title>
+   
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300&amp;display=swap" rel="stylesheet">
+    <style>
+        /* Center align the h1 tag */
+*{
+    font-family: Rubik,sans-serif;
+    color: #432000;
+}
+h1 {
+  text-align: center;
+}
+
+/* Style the form */
+form {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+label {
+  margin-right: 10px;
+}
+
+input[type="text"] {
+  padding: 5px;
+  font-size: 16px;
+  border: none;
+  border-bottom: 2px solid #1DB954;
+  margin-right: 10px;
+}
+
+button[type="submit"] {
+  background-color: #1DB954;
+  color: #FFFFFF;
+  border: none;
+  padding: 5px 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease-in-out;
+}
+
+button[type="submit"]:hover {
+  background-color: #1ED760;
+}
+
+/* Style the results */
+ul {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  background-color: #eef0f4;
+  max-width: 90%;
+  margin: 0 auto;
+}
+
+li {
+    font-size: 17px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 7px;
+    width: 95%;
+    margin: 5px 0px 0 15px;
+
+}
+
+a {
+  color: #1DB954;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+    </style>
+  </head>
+  <body>
+    <h1>Spotify Podcast Search</h1>
+    <form>
+      <label for="query">Search for Podcasts:</label>
+      <input type="text" id="query" name="query">
+      <button type="submit">Search</button>
+    </form>
+    <ul id="results"></ul>
+    <div id="audioContainer"></div>
+    <script>
+      const client_id = '7bc2289b50704655a4c4c68191587741';
+      const client_secret = 'a6de63e9b6ea4289aa6d253688b87627';
+      const redirect_uri = 'http://localhost:3000/callback';
+      let access_token = '';
+
+      // Authenticate app and obtain access token
+      fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Basic ' + btoa(client_id + ':' + client_secret),
+        },
+        body: 'grant_type=client_credentials',
+      })
+      .then(response => response.json())
+      .then(data => {
+        access_token = data.access_token;
+      })
+      .catch(error => console.error(error));
+
+      const form = document.querySelector('form');
+      const query = document.querySelector('#query');
+      const results = document.querySelector('#results');
+      const audioContainer = document.querySelector("#audioContainer")
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const searchQuery = query.value;
+        const market = 'US';
+
+        // Search for podcasts matching query
+        fetch(`https://api.spotify.com/v1/search?type=show&q=${searchQuery}&market=${market}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Bearer ' + access_token,
+          },
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Clear previous results
+          results.innerHTML = '';
+
+          const shows = data.shows.items;
+          console.log("First Screen :",shows)
+          shows.forEach((show) => {
+            
+            const showName = show.name;
+            const showId = show.id;
+
+            // Create list item for each show
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.textContent = showName;
+            a.href = '#';
+            a.dataset.showId = showId;
+            li.appendChild(a);
+            results.appendChild(li);
+
+            // Add click event listener to show episodes for show
+            a.addEventListener('click', (event) => {
+              event.preventDefault();
+              const showId = event.target.dataset.showId;
+
+              // Get episodes of show
+              fetch(`https://api.spotify.com/v1/shows/${showId}/episodes?market=${market}`, {
+                method: 'GET',
+                headers: {
+                  'Authorization': 'Bearer ' + access_token,
+                },
+              })
+              .then(response => response.json())
+              .then(data => {
+                // Clear previous results
+                results.innerHTML = '';
+
+                const episodes = data.items;
+                console.log("second Screen", episodes);
+                episodes.forEach((episode) => {
+                  const episodeName = episode.name;
+                  const episodeUrl = episode.external_urls.spotify;
+
+                  // Create list item for each episode
+                  const li = document.createElement('li');
+                  const a = document.createElement('a');
+                  a.textContent = episodeName;
+                  a.href = episodeUrl;
+                  a.target="_blank"
+                  li.appendChild(a);
+                  results.appendChild(li);  
+                });
+              })
+              .catch(error => console.error(error));
+            });
+          });
+        })
+        .catch(error => console.error(error));
+      });
+
+        
+
+
+    </script>
+  </body>
+</html>

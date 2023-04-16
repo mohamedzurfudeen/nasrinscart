@@ -69,3 +69,10 @@ ul li:hover {
     background-color: #FFECC7;
     cursor: pointer;
 }
+.soptify{
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    padding-top: 10px;
+
+}
