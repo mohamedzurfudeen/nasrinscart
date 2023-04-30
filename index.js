@@ -14,11 +14,13 @@ const addButtonEl = document.getElementById("add-button")
 const shoppingListEl = document.getElementById("shopping-list")
 
 addButtonEl.addEventListener("click", function() {
-    let inputValue = inputFieldEl.value
+    let inputValue = inputFieldEl.value;
+    if(inputValue!==""){
+        push(shoppingListInDB, inputValue)
+        sendNotifications()
+        clearInputFieldEl()
+    }
     
-    push(shoppingListInDB, inputValue)
-    
-    clearInputFieldEl()
 })
 
 onValue(shoppingListInDB, function(snapshot) {
@@ -62,4 +64,22 @@ function appendItemToShoppingListEl(item) {
     })
     
     shoppingListEl.append(newEl)
+}
+function sendNotifications(){
+        //alert("inside notifications")
+    // check if the browser supports notifications
+    if ("Notification" in window) {
+    // request permission to show notifications
+        Notification.requestPermission().then(function (permission) {
+            if (permission === "granted") {
+                //alert("inside granted")
+                // create a new notification
+                var notification = new Notification("Cart has a new item!!!");
+                // close the notification after 3 seconds
+                setTimeout(notification.close.bind(notification), 3000);
+            }
+        });
+    }
+  
+
 }
